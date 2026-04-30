@@ -15,19 +15,37 @@ class TraceGenerator:
 
         self.api_provider = api_provider.lower()
         self.openai_model = openai_model
-        self.claude_model = claude_model
 
-        self.openai_key = ""
-        self.claude_key = ""
-
+        cfg: Dict[str, Any] = {}
         try:
             with open(api_keys_path, "r", encoding="utf-8") as f:
                 cfg = json.load(f)
-            self.openai_key = cfg.get("OPENAI_API_KEY", "") or os.environ.get("OPENAI_API_KEY", "")
-            self.claude_key = cfg.get("CLAUDE_API_KEY", "") or os.environ.get("ANTHROPIC_API_KEY", "")
         except FileNotFoundError:
-            self.openai_key = os.environ.get("OPENAI_API_KEY", "")
-            self.claude_key = os.environ.get("ANTHROPIC_API_KEY", "")
+            pass
+
+        def pick(*names: str) -> str:
+            for name in names:
+                v = cfg.get(name, "") if isinstance(cfg, dict) else ""
+                if isinstance(v, str) and v.strip():
+                    return v.strip()
+            for name in names:
+                ev = os.environ.get(name, "")
+                if ev.strip():
+                    return ev.strip()
+            return ""
+
+        self.openai_key = pick("OPENAI_API_KEY")
+        self.claude_key = pick("CLAUDE_API_KEY", "KIMI_API_KEY", "ANTHROPIC_API_KEY")
+
+        # Claude-compatible endpoints (Anthropic official or proxies such as Kimi coding API)
+        base = pick("KIMI_BASE_URL", "CLAUDE_BASE_URL", "ANTHROPIC_BASE_URL")
+        self.claude_base_url = (base or "https://api.anthropic.com").rstrip("/")
+
+        self.claude_model = claude_model
+        if self.api_provider == "claude":
+            km = pick("KIMI_MODEL")
+            if km:
+                self.claude_model = km
 
         if not self.openai_key and not self.claude_key:
             raise RuntimeError("No API keys found. Please fill config/api_keys.json or set env vars.")
@@ -207,10 +225,12 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
         return r.json()["choices"][0]["message"]["content"]
 
     def _call_claude(self, prompt: str, crop_b64: Optional[str], full_b64: Optional[str]) -> str:
-        """Send prompt+images to Claude API and return text output."""
+        """Send prompt+images to Claude-compatible Messages API and return text output."""
         if not self.claude_key:
-            raise RuntimeError("CLAUDE_API_KEY missing in config/api_keys.json or environment.")
-        url = "https://api.anthropic.com/v1/messages"
+            raise RuntimeError(
+                "CLAUDE_API_KEY, KIMI_API_KEY, or ANTHROPIC_API_KEY missing in config/api_keys.json or environment."
+            )
+        url = f"{self.claude_base_url}/v1/messages"
         headers = {
             "x-api-key": self.claude_key,
             "anthropic-version": "2023-06-01",

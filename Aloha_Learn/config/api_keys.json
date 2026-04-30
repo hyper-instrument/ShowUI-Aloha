@@ -1,4 +1,7 @@
 {
     "OPENAI_API_KEY": "",
-    "CLAUDE_API_KEY": ""
+    "CLAUDE_API_KEY": "",
+    "KIMI_API_KEY": "",
+    "KIMI_BASE_URL": "https://api.kimi.com/coding/",
+    "KIMI_MODEL": "kimi-k2.6"
 }

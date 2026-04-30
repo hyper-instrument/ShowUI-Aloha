@@ -75,7 +75,7 @@ def run_pipeline(project_name: str) -> Path:
 
     tg = TraceGenerator(
         default_prompt_path="default_prompt.json",
-        api_provider="openai",            # or "claude" — adjust here if needed
+        api_provider="claude",
         openai_model="gpt-4o",
         claude_model="claude-sonnet-4-20250514",
         api_keys_path="config/api_keys.json",
