@@ -7,6 +7,10 @@ import platform
 import os
 import logging
 
+from dotenv import find_dotenv, load_dotenv
+
+load_dotenv(find_dotenv(usecwd=True), override=False)
+
 from flask import Flask, request, jsonify
 
 from ui_aloha.execute.executor.aloha_executor import AlohaExecutor
@@ -21,6 +25,8 @@ class SharedState:
         self.trace_id = args.trace_id
         self.server_url = args.server_url
         self.max_steps = getattr(args, 'max_steps', 50)
+        # Set per /run_task request (JSON `mode` or `actor_model`); not a CLI flag.
+        self.mode: str | None = None
 
         self.is_processing = False
         self.should_stop = False
@@ -50,19 +56,30 @@ def process_input():
             trace_id=shared_state.trace_id,
             server_url=shared_state.server_url,
             max_steps=shared_state.max_steps,
+            mode=shared_state.mode,
         )
 
         for loop_msg in sampling_loop:
             if shared_state.should_stop or shared_state.stop_event.is_set():
                 break
 
-            # Log minimal progress for visibility
+            # Progress logs: full text; avoid dumping megabytes of base64 screens.
             try:
                 msg_type = loop_msg.get("type")
-                content_preview = str(loop_msg.get("content"))[:100]
-                logging.info(f"[loop_msg] type={msg_type} content={content_preview}")
+                raw = loop_msg.get("content")
+                if msg_type == "image_base64" and isinstance(raw, str):
+                    head = 120
+                    snippet = raw[:head] + ("..." if len(raw) > head else "")
+                    logging.info(
+                        "[loop_msg] type=%s content_len=%s content_prefix=%s",
+                        msg_type,
+                        len(raw),
+                        snippet,
+                    )
+                else:
+                    logging.info("[loop_msg] type=%s content=%s", msg_type, raw)
             except Exception:
-                logging.info(f"[loop_msg] {str(loop_msg)[:100]}")
+                logging.info("[loop_msg] %s", loop_msg)
 
             # light pacing to avoid busy loop in UI
             time.sleep(0.1)
@@ -98,12 +115,23 @@ def run_task():
     shared_state.trace_id = data.get("trace_id", shared_state.trace_id)
     shared_state.server_url = data.get("server_url", shared_state.server_url)
     shared_state.max_steps = data.get("max_steps", shared_state.max_steps)
+    # Accept either `mode` or `actor_mode` for the per-request actor override
+    # (e.g. "vanilla-claude" to skip trace/planner). Empty string clears it.
+    incoming_mode = data.get("mode", data.get("actor_mode", shared_state.mode))
+    if isinstance(incoming_mode, str):
+        incoming_mode = incoming_mode.strip() or None
+    shared_state.mode = incoming_mode
 
     shared_state.stop_event.clear()
     shared_state.processing_thread = threading.Thread(target=process_input, daemon=True)
     shared_state.processing_thread.start()
 
-    return jsonify({"status": "success", "message": "Task started", "task": shared_state.task})
+    return jsonify({
+        "status": "success",
+        "message": "Task started",
+        "task": shared_state.task,
+        "mode": shared_state.mode,
+    })
 
 
 @app.route("/stop", methods=["POST"])

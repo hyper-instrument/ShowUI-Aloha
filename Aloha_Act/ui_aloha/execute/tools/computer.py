@@ -8,7 +8,13 @@ import time
 import logging
 if platform.system() == "Darwin":
     import Quartz  # uncomment this line if you are on macOS
-from enum import StrEnum
+try:
+    from enum import StrEnum  # Python 3.11+
+except ImportError:  # pragma: no cover - py3.10 fallback
+    from enum import Enum
+
+    class StrEnum(str, Enum):  # type: ignore[no-redef]
+        """Backport of enum.StrEnum for Python <3.11."""
 from pathlib import Path
 from typing import Literal, TypedDict
 from uuid import uuid4
@@ -32,6 +38,18 @@ OUTPUT_DIR = "./tmp/outputs"
 
 TYPING_DELAY_MS = 12
 TYPING_GROUP_SIZE = 50
+
+
+def _env_bool(name: str, default: bool) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() not in {"0", "false", "no", "off"}
+
+
+# Keep pyautogui's corner fail-safe enabled by default.
+# Set PYAUTOGUI_FAILSAFE=false in .env to disable it explicitly.
+pyautogui.FAILSAFE = _env_bool("PYAUTOGUI_FAILSAFE", True)
 
 Action = Literal[
     "key",

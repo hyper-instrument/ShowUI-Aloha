@@ -24,9 +24,15 @@ def simple_sampling_loop(
     trace_id: str = None,
     server_url: str = "http://localhost:7887/generate_action",
     max_steps: int = 20,
+    mode: str | None = None,
 ):
     """
     Synchronous sampling loop for assistant/tool interactions.
+
+    Args:
+        mode: Optional actor backend override. When set to ``"vanilla-claude"``
+            the server skips the trajectory manager and planner, and the actor
+            decides each action purely from the task + history + screenshot.
     """
     # Initialize action_history if it's None
     if action_history is None:
@@ -69,6 +75,8 @@ def simple_sampling_loop(
             "action_history": action_history,
             "trace_name": trace_id,
         }
+        if mode:
+            payload["mode"] = mode
 
         # Send request to  Run server
         infer_server_response = send_inference_request(payload, server_url)
@@ -116,7 +124,11 @@ def simple_sampling_loop(
             action_history = []  
             break
 
-        action_history.append(f"Executing guidance trajectory step [{step_traj_idx}]: {{Plan: {step_plan_info}, Action: {step_action}}}\n")
+        if mode == "vanilla-claude":
+            # No planner / trajectory: log the executed action only.
+            action_history.append(f"Action: {step_action}\n")
+        else:
+            action_history.append(f"Executing guidance trajectory step [{step_traj_idx}]: {{Plan: {step_plan_info}, Action: {step_action}}}\n")
 
         for exec_message in executor({"role": "assistant", "content": step_action}):
             yield exec_message

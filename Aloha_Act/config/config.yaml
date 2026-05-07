@@ -3,6 +3,33 @@ log_dir: "./logs"
 trace_dir: "./trace_data"
 
 # model settings
-planner_model: "gpt-5"
-actor_model: "oai-operator"
-os_name: "windows"  # "windows", "mac", "linux"
+# planner_model is auto-routed by run_llm:
+#   - "claude*" / "*Sonnet*" / "*Opus*" / "*Haiku*" / "Vendor2/Claude-*" -> Anthropic
+#   - everything else -> OpenAI Responses API
+planner_model: "Vendor2/Claude-4.6-Opus"
+# actor_model options:
+#   "oai-operator"               OpenAI computer-use-preview
+#   "claude-computer-use"        Claude beta tool_use (computer_20250124/20251124).
+#                                Requires a vendor that *truly* implements the
+#                                Computer Use beta with stable input schemas.
+#   "claude-aloha-computer-use"  Claude with NO beta tool: system prompt enforces
+#                                the Aloha JSON schema directly; the model emits
+#                                a single JSON action per turn. Robust against
+#                                vendors that simulate Computer Use via prompt
+#                                engineering (e.g. gpugeek/Vendor2).
+#   "ui-tars"                    UI-TARS / Qwen-style grounding model.
+actor_model: "claude-aloha-computer-use"
+# os_name: "windows"  # "windows", "mac", "linux"
+os_name: "mac"  # "windows", "mac", "linux"
+
+# Claude model name used by both `claude-computer-use` and
+# `claude-aloha-computer-use` actor backends.
+# Precedence: ANTHROPIC_MODEL env / .env > this value > built-in default.
+# Examples:
+#   "claude-sonnet-4-5-20250929"   (official Anthropic API)
+#   "Vendor2/Claude-4.6-Sonnet"    (gpugeek third-party endpoint)
+#   "Vendor2/Claude-4.6-Opus"      (gpugeek third-party endpoint)
+# For `claude-computer-use` the agent auto-selects the right beta header / tool
+# type based on the version it parses out of the name.
+claude_model: "Vendor2/Claude-4.6-Sonnet"
+

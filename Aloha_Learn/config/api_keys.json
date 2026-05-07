@@ -1,7 +1,7 @@
 {
     "OPENAI_API_KEY": "",
     "CLAUDE_API_KEY": "",
-    "KIMI_API_KEY": "",
-    "KIMI_BASE_URL": "https://api.kimi.com/coding/",
-    "KIMI_MODEL": "kimi-k2.6"
+    "ANTHROPIC_BASE_URL": "https://api.kimi.com/coding/",
+    "ANTHROPIC_AUTH_TOKEN": "",
+    "ANTHROPIC_MODEL": "kimi-k2.6"
 }

@@ -48,11 +48,19 @@ def initialize_agent_components(config, trace_dir, api_keys):
     planner_model = config.get("planner_model", "gpt-4o")
     actor_model = config.get("actor_model", "oai-operator")
     os_name = config.get("os_name", "windows")
-    
+    # Resolution: .env / process env (ANTHROPIC_MODEL) wins over config.yaml,
+    # so users can swap Claude models per-run without touching YAML.
+    claude_model = os.getenv("ANTHROPIC_MODEL") or config.get("claude_model")
+
     return {
         "trajectory_manager": TrajectoryManager(base_path=trace_dir),
         "planner": AlohaPlanner(model=planner_model, os_name=os_name, api_keys=api_keys),
-        "actor": AlohaActor(model=actor_model, os_name=os_name, api_keys=api_keys),
+        "actor": AlohaActor(
+            model=actor_model,
+            os_name=os_name,
+            api_keys=api_keys,
+            claude_model=claude_model,
+        ),
     }
 
 
@@ -89,6 +97,9 @@ def load_api_keys(json_path: str = "./config/api_keys.json") -> Dict[str, str]:
         "GOOGLE_API_KEY",
         "CLAUDE_API_KEY",
         "OPERATOR_OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "ANTHROPIC_AUTH_TOKEN",
+        "ANTHROPIC_BASE_URL",
     ]:
         if export_key in keys and not os.getenv(export_key):
             os.environ[export_key] = keys[export_key]

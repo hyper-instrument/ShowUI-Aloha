@@ -18,34 +18,49 @@ class TrajectoryManager:
     def get_full_trace(self, trace_name: str) -> Optional[Dict]:
         """
         Load trace data for a specific trace.
+
+        Resolution order (first hit wins):
+          1) base_path/{trace_name}_trace.json   (Aloha_Learn parser output)
+          2) base_path/{trace_name}.json         (legacy / hand-written)
+          3) base_path/{trace_name}              (raw filename, no extension)
+          4) base_path/{trace_name}/trace.json   (per-trace folder layout)
         """
-        # Layout: base_path/trace_name/trace.json
+        # Strip any extension/suffix the caller might have passed in.
+        clean = trace_name
+        for suffix in ("_trace.json", ".json"):
+            if clean.endswith(suffix):
+                clean = clean[: -len(suffix)]
+                break
+
         candidate_paths = [
-            os.path.join(self.base_path, f"{trace_name}"),
-            os.path.join(self.base_path, f"{trace_name}.json"),
-            os.path.join(self.base_path, trace_name, "trace.json")
+            os.path.join(self.base_path, f"{clean}_trace.json"),
+            os.path.join(self.base_path, f"{clean}.json"),
+            os.path.join(self.base_path, clean),
+            os.path.join(self.base_path, clean, "trace.json"),
         ]
 
         file_path = None
         for path in candidate_paths:
-            if os.path.exists(path):
+            if os.path.isfile(path):
                 file_path = path
                 break
+
         if file_path is None:
-            # Fall back to the first candidate for error message
-            file_path = candidate_paths[0]
-        
-        try:
-            with open(file_path, 'r', encoding='utf-8') as f:
-                trace_data = json.load(f)
-            
-            return trace_data
-        
-        except FileNotFoundError:
-            log.warning("Trace file not found: %s", file_path)
+            log.warning(
+                "Trace file not found for %r. Tried: %s",
+                trace_name,
+                ", ".join(candidate_paths),
+            )
             return None
-        except json.JSONDecodeError:
-            log.warning("JSON parsing error: %s", file_path)
+
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except json.JSONDecodeError as e:
+            log.warning("JSON parsing error in %s: %s", file_path, e)
+            return None
+        except OSError as e:
+            log.warning("Could not read trace %s: %s", file_path, e)
             return None
 
 
@@ -67,6 +82,10 @@ class TrajectoryManager:
         
         steps = trace_data.get("trajectory", [])
         context_steps = []
+
+        overall = trace_data.get("overall_task")
+        if overall is not None and str(overall).strip():
+            context_steps.append(f"Overall goal (recording): {str(overall).strip()}")
 
         for action in steps:
             

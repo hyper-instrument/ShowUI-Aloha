@@ -63,7 +63,10 @@ def send_inference_request(payload, url: str = "http://localhost:7887/generate_a
         
         log.info("Status: %s", result.get("status"))
         if "generated_action" in result:
-            log.info("Generated Action: %s", json.dumps(result["generated_action"], indent=2))
+            log.info(
+                "Generated Action: %s",
+                json.dumps(result["generated_action"], indent=2, ensure_ascii=False),
+            )
         
         return result
 

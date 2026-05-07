@@ -236,10 +236,27 @@ class AlohaExecutor:
         ]
 
     def _parse_key_or_hotkey(self, item: dict) -> list[dict]:
+        # ComputerTool's "key" action treats a "+"-joined string as a chord:
+        # it keyDowns each part in order, then keyUps in reverse — exactly
+        # the pyautogui.hotkey() semantics. So we always collapse a list of
+        # key names into one "+"-joined string and emit a SINGLE key action.
+        # Emitting one action per key would press them sequentially, which
+        # is wrong for HOTKEY (e.g. cmd+space must be held simultaneously).
         v = item.get("value")
-        if isinstance(v, list):
-            return [{"action": "key", "text": key, "coordinate": None} for key in v]
-        return [{"action": "key", "text": v, "coordinate": None}]
+        if v is None or v == "":
+            v = item.get("keys")  # new schema (claude-aloha-computer-use)
+        if v is None or v == "":
+            v = item.get("key")   # tolerate the singular alias too
+
+        if isinstance(v, (list, tuple)):
+            chord = "+".join(str(k).strip() for k in v if k is not None and str(k).strip())
+        else:
+            chord = str(v).strip() if v is not None else ""
+
+        if not chord:
+            raise ValueError(f"KEY/HOTKEY action requires a key name or chord; got: {item}")
+
+        return [{"action": "key", "text": chord, "coordinate": None}]
 
     def _parse_drag(self, item: dict) -> list[dict]:
         # Support multiple schema variants for drag coordinates:

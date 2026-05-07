@@ -1,6 +1,8 @@
 {
-    "OPENAI_API_KEY": "sk-proj-123", 
+    "OPENAI_API_KEY": "sk-proj-123",
     "OPERATOR_OPENAI_API_KEY": "sk-proj-123",
-    "CLAUDE_API_KEY": "sk-ant-api03-123"
-}
+    "CLAUDE_API_KEY": "sk-ant-api03-123",
 
+    "ANTHROPIC_BASE_URL": "https://api.gpugeek.com",
+    "ANTHROPIC_AUTH_TOKEN": "vendor-bearer-token-here"
+}

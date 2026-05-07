@@ -88,7 +88,7 @@ ruff check .
 
 `AlohaActor` selects the agent based on `mode` (default from `config.yaml`):
 - `oai-operator` → `OAIOperatorAgent`
-- `claude-computer-use` → `ClaudeComputerUseAgent`
+- `claude-computer-use` → `ClaudeComputerUseAgent` (model selected via `claude_model` in `config.yaml`; supports both Anthropic-native names like `claude-sonnet-4-5-20250929` and third-party vendor names like `Vendor2/Claude-4.6-Sonnet`. The agent auto-selects the right beta header — `computer-use-2025-11-24` for Sonnet 4.6+ / Opus 4.5+, `computer-use-2025-01-24` otherwise.)
 - `ui-tars` → `UITarsAgent`
 
 ### Executor
@@ -101,13 +101,13 @@ ruff check .
 
 ## Configuration
 
-- `Aloha_Act/config/config.yaml` — sets `planner_model`, `actor_model`, `os_name`, `log_dir`, `trace_dir`.
-- `Aloha_Act/config/api_keys.json` (git-ignored) — holds `OPENAI_API_KEY`, `CLAUDE_API_KEY`, `OPERATOR_OPENAI_API_KEY`, `GOOGLE_API_KEY`. Env vars with the same names are also respected.
+- `Aloha_Act/config/config.yaml` — sets `planner_model`, `actor_model`, `claude_model`, `os_name`, `log_dir`, `trace_dir`, `kimi_base_url`.
+- `Aloha_Act/config/api_keys.json` (git-ignored) — holds `OPENAI_API_KEY`, `CLAUDE_API_KEY`, `OPERATOR_OPENAI_API_KEY`, `GOOGLE_API_KEY`, plus optional `ANTHROPIC_BASE_URL` / `ANTHROPIC_AUTH_TOKEN` for third-party Anthropic-compatible vendors (e.g. gpugeek). Env vars with the same names are also respected; when both `ANTHROPIC_AUTH_TOKEN` and `CLAUDE_API_KEY` are present, the vendor bearer token wins.
 - `Aloha_Act/prompt.json` — optional convenience file; `aloha_run.py` will read `task` and `trace` from it if present.
 
 ## Key File Paths
 
-- Traces: `Aloha_Act/trace_data/{trace_id}.json`
+- Traces: `Aloha_Act/trace_data/{trace_id}_trace.json` (parser output). The `TrajectoryManager` also accepts `{trace_id}.json`, `{trace_id}/trace.json`, and `{trace_id}` as fallbacks.
 - Logs: `Aloha_Act/logs/` (per-request subdirectories)
 - Prompt templates: `Aloha_Act/ui_aloha/act/gui_agent/prompt_templates/` (referenced by `AlohaPlanner` and `AlohaActor` via Jinja2; may need to be created if missing)
 - Default prompt for trace generation: `Aloha_Learn/default_prompt.json`

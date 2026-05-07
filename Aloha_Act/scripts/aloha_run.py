@@ -26,6 +26,11 @@ from typing import Optional, Tuple
 import logging
 from pathlib import Path
 
+from dotenv import find_dotenv, load_dotenv
+
+# Load project-root .env so env vars propagate to subprocesses we spawn.
+load_dotenv(find_dotenv(usecwd=True), override=False)
+
 # Configure logging at import time so it's available throughout the module
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 log = logging.getLogger(__name__)

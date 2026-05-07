@@ -1,0 +1,12 @@
+User task:
+{{ task }}
+
+Actions already executed ({{ history_length }} so far):
+{{ action_history_str }}
+
+The image above is the current screenshot of the screen. Decide the single
+next action that makes the most progress toward completing the task, then call
+the `aloha_action` tool exactly once.
+
+Before issuing STOP: confirm in this screenshot that the task outcome is
+actually visible (not merely assumed from prior steps).

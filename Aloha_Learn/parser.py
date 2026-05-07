@@ -1,4 +1,11 @@
 # parser.py
+try:
+    from dotenv import find_dotenv, load_dotenv
+
+    load_dotenv(find_dotenv(usecwd=True), override=False)
+except ImportError:
+    pass
+
 import os
 import glob
 from pathlib import Path
@@ -38,14 +45,21 @@ def _find_single_log(inputs_dir: Path) -> Path:
     return hits[0]
 
 
-def run_pipeline(project_name: str) -> Path:
+def run_pipeline(project_name: str, overall_task: str = "") -> Path:
     """
     Orchestrate the 3-step pipeline:
       1) parse & merge events -> {project}_processed_log.json
       2) extract screenshots + crops -> {project}_processed_log_sc.json
       3) LLM trace generation -> {project}_trace.json
 
-    Only input: project_name (string). Returns final trace path.
+    Args:
+        project_name: Project folder name or path under Aloha_Learn conventions.
+        overall_task: Optional natural-language description of the whole recording; passed into
+            each caption-generation prompt so the LLM interprets clicks/keys in context.
+            Note: screenshot crop and coordinate scaling are deterministic (OpenCV); this hint
+            does not change that stage unless you extend screenshot_processor/log_processor.
+
+    Returns final trace path.
     """
     project_dir = _resolve_project_dir(project_name)
     inputs_dir = project_dir / "inputs"
@@ -84,7 +98,7 @@ def run_pipeline(project_name: str) -> Path:
         recording_json_path=str(log_sc),
         screenshots_dir=str(screenshots_dir),
         output_trace_path=str(out_trace),
-        overall_task=""
+        overall_task=overall_task,
     )
 
     print("=== Pipeline Complete ===")
@@ -100,5 +114,21 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Run full Parser pipeline (1) log → (2) screenshots → (3) trace")
     parser.add_argument("project_name", help="Either a bare name (e.g., 'Drag_0') or a full path to the project folder.")
+    parser.add_argument(
+        "--task",
+        "-t",
+        default="",
+        help="Whole-video task hint for trace captions (passed into LLM as Overall Task).",
+    )
+    parser.add_argument(
+        "--task-file",
+        default=None,
+        metavar="PATH",
+        help="UTF-8 file whose contents replace --task (for long prompts).",
+    )
     args = parser.parse_args()
-    run_pipeline(args.project_name)
+    task_hint = args.task or ""
+    if args.task_file:
+        tf = Path(args.task_file).expanduser()
+        task_hint = tf.read_text(encoding="utf-8").strip()
+    run_pipeline(args.project_name, overall_task=task_hint)

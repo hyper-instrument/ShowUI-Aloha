@@ -2,6 +2,12 @@ import os
 from datetime import datetime
 from typing import Any, Dict
 
+from dotenv import find_dotenv, load_dotenv
+
+# Load .env from project root before reading any env-driven config.
+# `override=False` lets pre-existing env vars win, matching standard precedence.
+load_dotenv(find_dotenv(usecwd=True), override=False)
+
 from flask import Flask, jsonify, request
 
 from config import config
@@ -52,6 +58,9 @@ def generate_action():
     screenshot = data.get("screenshot")
     query = data.get("query")
     action_history = data.get("action_history", [])
+    # Optional per-request actor override; when missing we fall back to
+    # `actor.model` (config.yaml: actor_model) inside the loop.
+    mode = data.get("mode") or data.get("actor_model")
 
     # Set up a per-request logging directory under log root
     log_dir = setup_logging_directory(task_id)
@@ -67,6 +76,7 @@ def generate_action():
         screenshot=screenshot,
         action_history=action_history,
         trace_name=trace_name,
+        mode=mode,
         log_dir=log_dir,
     )
 

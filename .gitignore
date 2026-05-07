@@ -1,3 +1,7 @@
-Aloha_Learn/__pycache__/
+__pycache__/
+logs/
 Aloha_Act/trace_data
-view-aloha-issue
+inputs
+.env
+.cache
+.DS_Store

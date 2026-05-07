@@ -1,6 +1,14 @@
 import os, json, base64, re, time, requests
 from typing import List, Dict, Any, Optional
 
+try:
+    from dotenv import find_dotenv, load_dotenv
+
+    load_dotenv(find_dotenv(usecwd=True), override=False)
+except ImportError:
+    pass
+
+
 class TraceGenerator:
     """Generate step-by-step traces from GUI actions with crop+full screenshots."""
 
@@ -35,20 +43,27 @@ class TraceGenerator:
             return ""
 
         self.openai_key = pick("OPENAI_API_KEY")
-        self.claude_key = pick("CLAUDE_API_KEY", "KIMI_API_KEY", "ANTHROPIC_API_KEY")
+        # Same precedence as Aloha_Act: vendor bearer token vs x-api-key style keys
+        self._anthropic_auth_token = pick("ANTHROPIC_AUTH_TOKEN")
+        self.claude_key = pick("CLAUDE_API_KEY", "ANTHROPIC_API_KEY")
 
-        # Claude-compatible endpoints (Anthropic official or proxies such as Kimi coding API)
-        base = pick("KIMI_BASE_URL", "CLAUDE_BASE_URL", "ANTHROPIC_BASE_URL")
+        # Claude-compatible endpoints (Anthropic official or vendor-compatible base URLs)
+        base = pick("ANTHROPIC_BASE_URL", "CLAUDE_BASE_URL")
         self.claude_base_url = (base or "https://api.anthropic.com").rstrip("/")
 
         self.claude_model = claude_model
         if self.api_provider == "claude":
-            km = pick("KIMI_MODEL")
-            if km:
-                self.claude_model = km
+            model_override = pick("ANTHROPIC_MODEL")
+            if model_override:
+                self.claude_model = model_override
 
-        if not self.openai_key and not self.claude_key:
-            raise RuntimeError("No API keys found. Please fill config/api_keys.json or set env vars.")
+        has_claude_creds = bool(self._anthropic_auth_token or self.claude_key)
+        if not self.openai_key and not has_claude_creds:
+            raise RuntimeError(
+                "No API keys found. Set OPENAI_API_KEY and/or "
+                "(ANTHROPIC_AUTH_TOKEN or CLAUDE_API_KEY / ANTHROPIC_API_KEY) "
+                "via .env or Aloha_Learn/config/api_keys.json."
+            )
 
     def _val(self, d: Dict[str, Any], *keys, default=""):
         """Get dictionary value by key (case-insensitive)."""
@@ -226,16 +241,20 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
 
     def _call_claude(self, prompt: str, crop_b64: Optional[str], full_b64: Optional[str]) -> str:
         """Send prompt+images to Claude-compatible Messages API and return text output."""
-        if not self.claude_key:
+        if not self.claude_key and not self._anthropic_auth_token:
             raise RuntimeError(
-                "CLAUDE_API_KEY, KIMI_API_KEY, or ANTHROPIC_API_KEY missing in config/api_keys.json or environment."
+                "ANTHROPIC_AUTH_TOKEN or CLAUDE_API_KEY / ANTHROPIC_API_KEY "
+                "missing (.env or config/api_keys.json)."
             )
         url = f"{self.claude_base_url}/v1/messages"
         headers = {
-            "x-api-key": self.claude_key,
             "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
+            "content-type": "application/json",
         }
+        if self._anthropic_auth_token:
+            headers["Authorization"] = f"Bearer {self._anthropic_auth_token.strip()}"
+        else:
+            headers["x-api-key"] = self.claude_key
         content = [{"type": "text", "text": prompt}]
         if crop_b64:
             content.append({"type": "image",
@@ -333,8 +352,9 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
             step_idx += 1
             time.sleep(0.1)
 
+            _trace_doc = self._trace_output_dict(traj, overall_task)
             with open(output_trace_path, "w", encoding="utf-8") as f:
-                json.dump({"trajectory": traj}, f, ensure_ascii=False, indent=2)
+                json.dump(_trace_doc, f, ensure_ascii=False, indent=2)
 
             try:
                 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -343,10 +363,18 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
                 os.makedirs(trace_data_dir, exist_ok=True)
                 alt_path = os.path.join(trace_data_dir, os.path.basename(output_trace_path))
                 with open(alt_path, "w", encoding="utf-8") as f2:
-                    json.dump({"trajectory": traj}, f2, ensure_ascii=False, indent=2)
+                    json.dump(_trace_doc, f2, ensure_ascii=False, indent=2)
                 print(f"Trace also saved to: {alt_path}")
             except Exception as e:
-                print(f"Warning: Failed to save copy to trace_data folder: {e}")          
+                print(f"Warning: Failed to save copy to trace_data folder: {e}")
+
+    @staticmethod
+    def _trace_output_dict(traj: List[Dict[str, Any]], overall_task: str) -> Dict[str, Any]:
+        doc: Dict[str, Any] = {"trajectory": traj}
+        ot = (overall_task or "").strip()
+        if ot:
+            doc["overall_task"] = ot
+        return doc
 
 
 if __name__ == "__main__":

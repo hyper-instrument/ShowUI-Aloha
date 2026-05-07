@@ -1,3 +1,18 @@
-1. CLICK: Click on an element, "value" is not applicable and the "position" [x,y] is required.
-2. MOVE: Move the mouse to an element, "value" is not applicable and the "position" [x,y] is required.
+Each action is a single JSON object with the shape:
+  {"action": "<NAME>", "value": <string|array|number|null>, "position": [<int_x>, <int_y>]}
 
+Allowed NAMEs (pick exactly one per turn):
+  1.  CLICK         — click an element. position [x,y] required. value is "".
+  2.  RIGHT_CLICK   — right-click an element. position [x,y] required. value is "".
+  3.  DOUBLE_CLICK  — double-click an element. position [x,y] required.
+  4.  TRIPLE_CLICK  — triple-click (e.g. select a paragraph). position [x,y] required.
+  5.  MOVE          — move/hover the mouse. position [x,y] required.
+  6.  INPUT         — type text. value is the string to type. position is [0, 0].
+  7.  KEY           — press one named key (e.g. "Enter", "Escape", "Tab", "Return"). value is the key name.
+  8.  HOTKEY        — press a chord. value is an array (e.g. ["cmd", "s"], ["ctrl", "shift", "t"]).
+  9.  ENTER         — press Enter. value "", position [0, 0].
+  10. ESC           — press Escape. value "", position [0, 0].
+  11. DRAG          — click-and-drag. value is the start [x,y]; position is the end [x,y].
+  12. SCROLL        — scroll. value is integer (positive = down/right, negative = up/left). position is the scroll origin or [0, 0].
+  13. WAIT          — wait for a moment. value is seconds (float). position [0, 0].
+  14. STOP          — the entire task is fully complete. value is a brief summary string. position [0, 0].
