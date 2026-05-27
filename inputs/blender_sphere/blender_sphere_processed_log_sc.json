@@ -1,0 +1,302 @@
+[
+  {
+    "timestamp": 2.955,
+    "action": "Type: BLENDER",
+    "coords": null,
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/2.855s.jpg",
+    "screenshot_crop": "screenshots/2.855s.crop.jpg"
+  },
+  {
+    "timestamp": 3.659,
+    "action": "Press ENTER",
+    "coords": null,
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/3.559s.jpg",
+    "screenshot_crop": "screenshots/3.559s.crop.jpg"
+  },
+  {
+    "timestamp": 5.621,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 753.3333333333333,
+        "y": 630.0
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/5.521s.jpg",
+    "screenshot_crop": "screenshots/5.521s.crop.jpg"
+  },
+  {
+    "timestamp": 8.572,
+    "action": "ScrollDown at",
+    "coords": [
+      {
+        "x": 800.0,
+        "y": 562.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "scroll_count": 1,
+    "path": null,
+    "screenshot_full": "screenshots/8.472s.jpg",
+    "screenshot_crop": "screenshots/8.472s.crop.jpg"
+  },
+  {
+    "timestamp": 8.583,
+    "action": "RClick at",
+    "coords": [
+      {
+        "x": 800.0,
+        "y": 562.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/8.483s.jpg",
+    "screenshot_crop": "screenshots/8.483s.crop.jpg"
+  },
+  {
+    "timestamp": 8.587,
+    "action": "ScrollDown at",
+    "coords": [
+      {
+        "x": 800.0,
+        "y": 562.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "scroll_count": 1,
+    "path": null,
+    "screenshot_full": "screenshots/8.487s.jpg",
+    "screenshot_crop": "screenshots/8.487s.crop.jpg"
+  },
+  {
+    "timestamp": 8.7,
+    "action": "RRelease at",
+    "coords": [
+      {
+        "x": 800.0,
+        "y": 562.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/8.600s.jpg",
+    "screenshot_crop": "screenshots/8.600s.crop.jpg"
+  },
+  {
+    "timestamp": 10.507,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 757.3333333333333,
+        "y": 530.4
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/10.407s.jpg",
+    "screenshot_crop": "screenshots/10.407s.crop.jpg"
+  },
+  {
+    "timestamp": 13.854,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 210.66666666666666,
+        "y": 956.4
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/13.754s.jpg",
+    "screenshot_crop": "screenshots/13.754s.crop.jpg"
+  },
+  {
+    "timestamp": 15.876,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 356.0,
+        "y": 802.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/15.776s.jpg",
+    "screenshot_crop": "screenshots/15.776s.crop.jpg"
+  },
+  {
+    "timestamp": 16.793,
+    "action": "Type: 5",
+    "coords": [
+      {
+        "x": 356.0,
+        "y": 802.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/16.693s.jpg",
+    "screenshot_crop": "screenshots/16.693s.crop.jpg"
+  },
+  {
+    "timestamp": 17.175,
+    "action": "Press ENTER",
+    "coords": [
+      {
+        "x": 356.0,
+        "y": 802.8
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/17.075s.jpg",
+    "screenshot_crop": "screenshots/17.075s.crop.jpg"
+  },
+  {
+    "timestamp": 20.359,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 769.3333333333333,
+        "y": 543.6
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/20.259s.jpg",
+    "screenshot_crop": "screenshots/20.259s.crop.jpg"
+  },
+  {
+    "timestamp": 21.123,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 769.3333333333333,
+        "y": 553.1999999999999
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/21.023s.jpg",
+    "screenshot_crop": "screenshots/21.023s.crop.jpg"
+  },
+  {
+    "timestamp": 25.564,
+    "action": "Type: A1",
+    "coords": [
+      {
+        "x": 726.6666666666666,
+        "y": 771.6
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/25.464s.jpg",
+    "screenshot_crop": "screenshots/25.464s.crop.jpg"
+  },
+  {
+    "timestamp": 26.858,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 726.6666666666666,
+        "y": 771.6
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/26.758s.jpg",
+    "screenshot_crop": "screenshots/26.758s.crop.jpg"
+  },
+  {
+    "timestamp": 29.405,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 62.666666666666664,
+        "y": 91.2
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/29.305s.jpg",
+    "screenshot_crop": "screenshots/29.305s.crop.jpg"
+  },
+  {
+    "timestamp": 31.456,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 136.0,
+        "y": 243.6
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/31.356s.jpg",
+    "screenshot_crop": "screenshots/31.356s.crop.jpg"
+  },
+  {
+    "timestamp": 34.456,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 601.3333333333333,
+        "y": 750.0
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/34.356s.jpg",
+    "screenshot_crop": "screenshots/34.356s.crop.jpg"
+  },
+  {
+    "timestamp": 42.782,
+    "action": "Type: SPHERE",
+    "coords": [
+      {
+        "x": 1425.3333333333333,
+        "y": 769.1999999999999
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/42.682s.jpg",
+    "screenshot_crop": "screenshots/42.682s.crop.jpg"
+  },
+  {
+    "timestamp": 44.239,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 1425.3333333333333,
+        "y": 769.1999999999999
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/44.139s.jpg",
+    "screenshot_crop": "screenshots/44.139s.crop.jpg"
+  },
+  {
+    "timestamp": 49.624,
+    "action": "LClick at",
+    "coords": [
+      {
+        "x": 1436.0,
+        "y": 768.0
+      }
+    ],
+    "current_software": "Aloha Screen Recorder - aloha-screen-recorder",
+    "path": null,
+    "screenshot_full": "screenshots/49.524s.jpg",
+    "screenshot_crop": "screenshots/49.524s.crop.jpg"
+  }
+]

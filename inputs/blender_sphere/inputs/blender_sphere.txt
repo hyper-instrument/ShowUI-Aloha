@@ -1,0 +1,139 @@
+# Input Recording Log
+# Started: 2026-05-06 18:56:05.409
+# Metadata: {"video_start_time": "2026-05-06 18:56:05.409", "start_message": "Mouse and keyboard monitoring service started", "recording_timestamp": "20260506_185605", "screen_info": {"0": {"x0": 0, "y0": 0, "width": 2880, "height": 1800, "scale_factor": 2.0}}}
+# Format: JSON per line
+# Fields: timestamp, message, window
+
+{"timestamp": "00:00:00.000", "message": "{\"0\": {\"x0\": 0, \"y0\": 0, \"width\": 2880, \"height\": 1800, \"scale_factor\": 2.0}}", "window": "System Info"}
+{"timestamp": "00:00:00.006", "message": "Initial Active Window: Aloha Screen Recorder - aloha-screen-recorder", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:00.648", "message": "Hotkey: CMD", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:00.781", "message": "Hotkey: CMD+SPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:00.922", "message": "Key Release: SPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:00.926", "message": "Hotkey: CMD+SPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:00.926", "message": "Key Release: SPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:01.044", "message": "Key Release: CMD", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:01.590", "message": "Key Press: B", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:01.704", "message": "Key Release: B", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:01.764", "message": "Key Press: L", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:01.882", "message": "Key Release: L", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.123", "message": "Key Press: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.261", "message": "Key Release: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.340", "message": "Key Press: N", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.444", "message": "Key Release: N", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.563", "message": "Key Press: D", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.666", "message": "Key Release: D", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.791", "message": "Key Press: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:02.955", "message": "Key Press: R", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:03.026", "message": "Key Release: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:03.030", "message": "Key Release: R", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:03.659", "message": "Key Press: ENTER", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:03.737", "message": "Key Release: ENTER", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:05.541", "message": "LClick at (565, 525)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:05.621", "message": "LRelease at (565, 525)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:07.707", "message": "Key Press: TAB", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:07.839", "message": "Key Release: TAB", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:08.572", "message": "ScrollDown at (600, 469)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:08.583", "message": "RClick at (600, 469)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:08.587", "message": "ScrollDown at (600, 469)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:08.700", "message": "RRelease at (600, 469)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:10.404", "message": "LClick at (568, 442)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:10.507", "message": "LRelease at (568, 442)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:13.793", "message": "LClick at (158, 797)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:13.854", "message": "LRelease at (158, 797)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:15.766", "message": "LClick at (267, 669)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:15.876", "message": "LRelease at (267, 669)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:16.793", "message": "Key Press: 5", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:16.919", "message": "Key Release: 5", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:17.175", "message": "Key Press: ENTER", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:17.317", "message": "Key Release: ENTER", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:20.192", "message": "LClick at (577, 453)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:20.359", "message": "LRelease at (577, 453)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:21.027", "message": "LClick at (577, 461)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:21.123", "message": "LRelease at (577, 461)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:21.480", "message": "Key Press: A", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:21.631", "message": "Key Release: A", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:23.425", "message": "Hotkey: ALT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:23.477", "message": "Hotkey: ALT+SHIFT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:24.393", "message": "Hotkey: ALT+SHIFT+", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:24.477", "message": "Key Release: ", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:24.623", "message": "Key Release: ALT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:24.629", "message": "Key Release: SHIFT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:25.564", "message": "Key Press: 1", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:25.672", "message": "Key Release: 1", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:26.771", "message": "LClick at (545, 643)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:26.858", "message": "LRelease at (545, 643)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:27.078", "message": "Key Press: TAB", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:27.173", "message": "Key Release: TAB", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:29.324", "message": "LClick at (47, 76)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:29.405", "message": "LRelease at (47, 76)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:31.362", "message": "LClick at (102, 203)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:31.456", "message": "LRelease at (102, 203)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:34.320", "message": "LClick at (451, 625)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:34.456", "message": "LRelease at (451, 625)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.060", "message": "Key Press: LEFT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.191", "message": "Key Release: LEFT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.374", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.458", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.558", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.625", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.726", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.798", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.909", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:35.978", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.066", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.158", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.267", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.396", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.483", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.594", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.684", "message": "Key Press: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:36.832", "message": "Key Release: RIGHT", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:37.174", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:37.675", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:37.756", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:37.841", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:37.923", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.023", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.058", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.396", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.482", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.595", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.678", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:38.913", "message": "Key Press: S", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.056", "message": "Key Release: S", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.156", "message": "Key Press: H", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.238", "message": "Key Release: H", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.281", "message": "Key Press: P", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.406", "message": "Key Release: P", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.495", "message": "Key Press: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.640", "message": "Key Release: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:39.934", "message": "Key Press: R", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.083", "message": "Key Release: R", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.407", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.472", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.576", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.647", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.746", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.829", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:40.931", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.006", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.109", "message": "Key Press: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.211", "message": "Key Release: BACKSPACE", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.315", "message": "Key Press: S", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.434", "message": "Key Press: P", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.440", "message": "Key Release: S", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.557", "message": "Key Release: P", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.661", "message": "Key Press: H", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.762", "message": "Key Release: H", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:41.982", "message": "Key Press: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:42.158", "message": "Key Release: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:42.593", "message": "Key Press: R", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:42.690", "message": "Key Release: R", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:42.782", "message": "Key Press: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:42.909", "message": "Key Release: E", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:44.108", "message": "LClick at (1069, 641)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:44.239", "message": "LRelease at (1069, 641)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:49.403", "message": "LClick at (1077, 640)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:49.624", "message": "LRelease at (1077, 640)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:51.575", "message": "LClick at (1418, 50)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
+{"timestamp": "00:00:51.678", "message": "LRelease at (1418, 50)", "window": "Aloha Screen Recorder - aloha-screen-recorder"}
