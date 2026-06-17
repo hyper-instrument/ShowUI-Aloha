@@ -65,6 +65,14 @@ class TraceGenerator:
                 "via .env or Aloha_Learn/config/api_keys.json."
             )
 
+        # Per-request timeout (seconds). Honor API_TIMEOUT_MS (ms) if set; some
+        # vendor/Opus endpoints are slow with image payloads, so default high.
+        timeout_ms = pick("API_TIMEOUT_MS")
+        try:
+            self.request_timeout = max(120, int(float(timeout_ms)) // 1000) if timeout_ms else 600
+        except (TypeError, ValueError):
+            self.request_timeout = 600
+
     def _val(self, d: Dict[str, Any], *keys, default=""):
         """Get dictionary value by key (case-insensitive)."""
         for k in keys:
@@ -223,6 +231,25 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
         tips = "; ".join(guide_map[m] for m in present)
         return f"Modifier: {tips}. "
 
+    def _raise_api_error(self, response: requests.Response, provider: str) -> None:
+        """Raise RuntimeError with vendor message when an LLM HTTP call fails."""
+        detail = response.text.strip()
+        try:
+            body = response.json()
+            if isinstance(body, dict):
+                err = body.get("error")
+                if isinstance(err, dict) and err.get("message"):
+                    detail = str(err["message"])
+                elif body.get("message"):
+                    detail = str(body["message"])
+        except (json.JSONDecodeError, ValueError, TypeError):
+            pass
+        if len(detail) > 500:
+            detail = detail[:500] + "..."
+        raise RuntimeError(
+            f"{provider} API request failed ({response.status_code}): {detail or response.reason}"
+        )
+
     def _call_openai(self, prompt: str, crop_b64: Optional[str], full_b64: Optional[str]) -> str:
         """Send prompt+images to OpenAI API and return text output."""
         if not self.openai_key:
@@ -235,8 +262,9 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
         data = {"model": self.openai_model,
                 "messages": [{"role": "user", "content": content}],
                 "temperature": 0.2}
-        r = requests.post(url, headers=headers, json=data, timeout=120)
-        r.raise_for_status()
+        r = requests.post(url, headers=headers, json=data, timeout=self.request_timeout)
+        if not r.ok:
+            self._raise_api_error(r, "OpenAI")
         return r.json()["choices"][0]["message"]["content"]
 
     def _call_claude(self, prompt: str, crop_b64: Optional[str], full_b64: Optional[str]) -> str:
@@ -269,8 +297,9 @@ Respond with JSON only. If your first attempt is not valid JSON, immediately re-
         data = {"model": self.claude_model,
                 "max_tokens": 1200,
                 "messages": [{"role": "user", "content": content}]}
-        r = requests.post(url, headers=headers, json=data, timeout=120)
-        r.raise_for_status()
+        r = requests.post(url, headers=headers, json=data, timeout=self.request_timeout)
+        if not r.ok:
+            self._raise_api_error(r, f"Claude ({self.claude_base_url})")
         return r.json()["content"][0]["text"]
 
     def generate_trace(self, recording_json_path: str,

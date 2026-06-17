@@ -8,10 +8,11 @@ except ImportError:
 
 import os
 import glob
+import json
 from pathlib import Path
 
 from log_processor import LogProcessor
-from screenshot_processor import VideoScreenshotExtractor
+from screenshot_processor import VideoScreenshotExtractor, ScreenshotExtractor
 from trace_generator import TraceGenerator
 
 
@@ -172,10 +173,13 @@ def run_pipeline(project_name: str, overall_task: str = "") -> Path:
     lp.process_log_file(str(raw_log), str(processed_log_path), time_threshold=5.0)
 
     # ---------- Step 2: screenshots + scaled coords -> *_processed_log_sc.json ----------
-    vse = VideoScreenshotExtractor()
-    # This function expects the processed log with the exact filename in the project root.
-    # It will discover the video and create {project}_processed_log_sc.json and /screenshots.
-    _, screenshots_dir, meta = vse.process_project(str(project_dir))
+    # video 模式: 有 mp4 → 从视频抽帧; screenshot 模式: 无 mp4 但有 inputs/frames/ → 用预存帧。
+    if any(inputs_dir.glob("*.mp4")):
+        extractor = VideoScreenshotExtractor()
+    else:
+        extractor = ScreenshotExtractor()
+    # Creates {project}_processed_log_sc.json and /screenshots from the chosen frame source.
+    _, screenshots_dir, meta = extractor.process_project(str(project_dir))
 
     # ---------- Step 3: generate LLM trace -> {project}_trace.json ----------
     log_sc = project_dir / f"{project_dir.name}_processed_log_sc.json"

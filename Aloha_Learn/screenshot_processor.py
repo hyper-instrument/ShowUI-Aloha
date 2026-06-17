@@ -1,6 +1,7 @@
 import os
 import cv2
 import json
+import hashlib
 from pathlib import Path
 import numpy as np
 
@@ -119,6 +120,11 @@ class VideoScreenshotExtractor:
 
     def process_actions(self, actions, video_path, screenshots_path, need_scaling, scale_x, scale_y):
         updated = []
+        # 冻结帧检测: 相邻动作若取到内容完全相同的完整帧, 说明上游抓帧过稀,
+        # 完整图无法逐步反映状态 (crop 红叉在动而完整图不变)。仅告警, 不阻断。
+        prev_full_hash = None
+        prev_ts = None
+        dup_events = []
         for a in actions:
             act_str = (a.get("action") or "").strip()
             if act_str == "CONFIG" or act_str.startswith("Active Window"):
@@ -146,6 +152,12 @@ class VideoScreenshotExtractor:
                 continue
 
             H, W = frame.shape[:2]
+            # 完整帧内容指纹, 用于检测相邻动作复用同一张冻结帧
+            full_hash = hashlib.md5(np.ascontiguousarray(frame).tobytes()).hexdigest()
+            if prev_full_hash is not None and full_hash == prev_full_hash:
+                dup_events.append((prev_ts, timestamp))
+            prev_full_hash, prev_ts = full_hash, timestamp
+
             pt = self._primary_point_from_coords(ua.get('coords'))
             actt = act_str.lower()
             no_coor = ("scroll" in actt) or ("wheel" in actt) or ("hotkey" in actt) or ("type" in actt) or ("presss" in actt)
@@ -220,6 +232,16 @@ class VideoScreenshotExtractor:
             ua['screenshot_crop'] = f"screenshots/{crop_fn}" if crop_ok else None
 
             updated.append(ua)
+
+        if dup_events:
+            pairs = ", ".join(f"{a:.3f}s→{b:.3f}s" for a, b in dup_events[:5])
+            tail = " ..." if len(dup_events) > 5 else ""
+            print(
+                f"[Warning] {len(dup_events)} 处相邻动作的完整截图完全相同 "
+                f"({pairs}{tail})；上游抓帧过稀, 完整图无法逐步反映状态 "
+                f"(crop 标记在动而完整图不变)。建议重新导出(按事件时间戳重选独立帧)"
+                f"或提高录制采样率 / 改用视频态。"
+            )
         return updated
     
     def _crop_with_black_padding(self, frame, x, y, crop_size=256):
@@ -344,7 +366,92 @@ class VideoScreenshotExtractor:
         }
 
         return updated_actions, screenshots_dir, meta
-    
+
+
+class ScreenshotExtractor(VideoScreenshotExtractor):
+    """Screenshot mode: reuse all crop/scale/marker logic, but source frames from
+    pre-extracted per-action images in inputs/frames/<relative_seconds>.jpg
+    (written by `ace record export`) instead of seeking into a video."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._frame_index = []  # sorted list of (timestamp_seconds, Path)
+
+    def _build_frame_index(self, frames_dir):
+        idx = []
+        for p in Path(frames_dir).glob("*.jpg"):
+            try:
+                idx.append((float(p.stem), p))
+            except ValueError:
+                continue
+        idx.sort(key=lambda t: t[0])
+        return idx
+
+    def _get_frame_at(self, frames_dir, timestamp_seconds):
+        # Override: pick the pre-saved frame nearest to the action timestamp.
+        if not self._frame_index:
+            return None
+        _, best_path = min(self._frame_index, key=lambda t: abs(t[0] - timestamp_seconds))
+        img = cv2.imread(str(best_path))
+        if img is None:
+            return None
+        return cv2.resize(img, (self.target_width, self.target_height), interpolation=cv2.INTER_LANCZOS4)
+
+    def process_project(self, project_name):
+        project_path = Path(project_name)
+        if not project_path.exists():
+            possible_root = Path.cwd() / "projects" / project_name
+            if possible_root.exists():
+                project_path = possible_root
+            else:
+                raise FileNotFoundError(f"Project folder not found: {project_path}")
+
+        project_dir = project_path.resolve()
+        inputs_dir = project_dir / "inputs"
+        if not inputs_dir.exists():
+            raise FileNotFoundError(f"Inputs directory not found: {inputs_dir}")
+
+        frames_dir = inputs_dir / "frames"
+        self._frame_index = self._build_frame_index(frames_dir)
+        if not self._frame_index:
+            raise FileNotFoundError(f"No pre-extracted frames found in {frames_dir}")
+
+        log_path = project_dir / f"{project_dir.name}_processed_log.json"
+        if not log_path.exists():
+            raise FileNotFoundError(f"Processed log not found: {log_path}")
+
+        screenshots_dir = project_dir / "screenshots"
+        with open(log_path, "r", encoding="utf-8") as f:
+            actions = json.load(f)
+
+        ow, oh = self._parse_config_resolution(actions)
+        if ow is None or oh is None:
+            raise ValueError("Could not find screen resolution in the CONFIG action")
+
+        frame_w, frame_h = self.target_width, self.target_height
+        need_scaling = not (ow == frame_w and oh == frame_h)
+        scale_x = frame_w / ow if ow else 1.0
+        scale_y = frame_h / oh if oh else 1.0
+
+        updated_actions = self.process_actions(
+            actions, str(frames_dir), screenshots_dir, need_scaling, scale_x, scale_y
+        )
+        out_json_sc = project_dir / f"{project_dir.name}_processed_log_sc.json"
+        with open(out_json_sc, "w", encoding="utf-8") as f:
+            json.dump(updated_actions, f, ensure_ascii=False, indent=2)
+
+        meta = {
+            "video_file": None,
+            "frames_dir": str(frames_dir),
+            "log_file": str(log_path),
+            "coordinate_scaling": need_scaling,
+            "original_resolution": f"{ow}x{oh}" if ow and oh else "unknown",
+            "target_resolution": f"{frame_w}x{frame_h}",
+            "saved_log_sc": str(out_json_sc),
+        }
+        return updated_actions, screenshots_dir, meta
+
+
 if __name__ == "__main__":
     import argparse
     import traceback
