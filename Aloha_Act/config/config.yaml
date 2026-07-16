@@ -6,7 +6,7 @@ trace_dir: "./trace_data"
 # planner_model is auto-routed by run_llm:
 #   - "claude*" / "*Sonnet*" / "*Opus*" / "*Haiku*" / "Vendor2/Claude-*" -> Anthropic
 #   - everything else -> OpenAI Responses API
-planner_model: "Vendor2/Claude-4.6-Opus"
+planner_model: "claude-47-opus"
 # actor_model options:
 #   "oai-operator"               OpenAI computer-use-preview
 #   "claude-computer-use"        Claude beta tool_use (computer_20250124/20251124).
@@ -19,8 +19,7 @@ planner_model: "Vendor2/Claude-4.6-Opus"
 #                                engineering (e.g. gpugeek/Vendor2).
 #   "ui-tars"                    UI-TARS / Qwen-style grounding model.
 actor_model: "claude-aloha-computer-use"
-# os_name: "windows"  # "windows", "mac", "linux"
-os_name: "mac"  # "windows", "mac", "linux"
+os_name: "windows"  # "windows", "mac", "linux"
 
 # Claude model name used by both `claude-computer-use` and
 # `claude-aloha-computer-use` actor backends.
@@ -31,5 +30,5 @@ os_name: "mac"  # "windows", "mac", "linux"
 #   "Vendor2/Claude-4.6-Opus"      (gpugeek third-party endpoint)
 # For `claude-computer-use` the agent auto-selects the right beta header / tool
 # type based on the version it parses out of the name.
-claude_model: "Vendor2/Claude-4.6-Sonnet"
+claude_model: "claude-47-opus"
 

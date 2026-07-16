@@ -101,7 +101,7 @@ class LogProcessor:
                             continue
                         except:
                             pass
-                    
+
                     action_dict = {
                         "timestamp": timestamp_seconds,
                         "action": action,
@@ -119,7 +119,38 @@ class LogProcessor:
         
         if not actions:
             raise ValueError("No valid actions found in log file")
-            
+
+        # Inject a synthetic CONFIG from screen dimensions if none exists.
+        # This is required for screenpipe-only recordings which do not emit
+        # a CONFIG line in the action log.
+        if not any(a.get("action") == "CONFIG" for a in actions):
+            try:
+                from PIL import Image
+                from pathlib import Path
+                # log_file_path is like .../project/inputs/actions.log
+                project_dir = Path(log_file_path).resolve().parent.parent
+                frames_dir = project_dir / "inputs" / "frames"
+                screenshots_dir = project_dir / "inputs" / "screenshots"
+                sample = None
+                for d in (frames_dir, screenshots_dir):
+                    if d.exists():
+                        for p in d.glob("*.jpg"):
+                            sample = p
+                            break
+                    if sample:
+                        break
+                if sample:
+                    with Image.open(sample) as img:
+                        w, h = img.size
+                    actions.insert(0, {
+                        "timestamp": 0.0,
+                        "action": "CONFIG",
+                        "coords": {"0": {"x0": 0, "y0": 0, "width": w, "height": h, "scale_factor": 1.0}},
+                        "current_software": "System Info",
+                    })
+            except Exception:
+                pass
+
         self.actions = actions
         return actions
     
