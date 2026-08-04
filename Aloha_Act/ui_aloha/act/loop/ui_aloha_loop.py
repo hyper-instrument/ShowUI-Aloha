@@ -77,7 +77,7 @@ def ui_aloha_loop(
         )
 
         action_path = os.path.join(log_dir, f"actor_{actor_mode}.json")
-        with open(action_path, "w") as f:
+        with open(action_path, "w", encoding="utf-8") as f:
             json.dump(action, f, ensure_ascii=False, indent=4)
 
         action_vis_path = os.path.join(
@@ -107,7 +107,7 @@ def ui_aloha_loop(
     
     # Save planning to log folder
     planning_path = os.path.join(log_dir, "planning_guidance_trajectory.json")
-    with open(planning_path, "w") as f:
+    with open(planning_path, "w", encoding="utf-8") as f:
         json.dump(guidance_trajectory, f, ensure_ascii=False, indent=4)
 
     # Generate plan using AlohaPlanner
@@ -120,7 +120,7 @@ def ui_aloha_loop(
     )
 
     planning_path = os.path.join(log_dir, "planning.json")
-    with open(planning_path, "w") as f:
+    with open(planning_path, "w", encoding="utf-8") as f:
         json.dump(planning, f, ensure_ascii=False, indent=4)
     
     # Extract planner output fields
@@ -140,7 +140,7 @@ def ui_aloha_loop(
     
     # Save action to log folder
     action_path = os.path.join(log_dir, f"actor_{actor_mode}.json")
-    with open(action_path, "w") as f:
+    with open(action_path, "w", encoding="utf-8") as f:
         json.dump(action, f, ensure_ascii=False, indent=4)
 
     # Draw action coord on screenshot

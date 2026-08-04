@@ -240,12 +240,23 @@ class ClaudeAlohaComputerUseAgent:
 
             # Standard tool use call. No `betas=[...]`. We register exactly
             # one custom tool (`aloha_action`) and force the model to call it.
+            #
+            # thinking=disabled: some upstream vendors (gpugeek/Vendor2 for
+            # Claude-4.7-Opus) inject `thinking={"type":"adaptive"}` by
+            # default when they see a claude-4.7 model, which is
+            # incompatible with `tool_choice={"type":"tool", ...}` and
+            # produces a 400 "tool_choice 'specified' is incompatible with
+            # thinking enabled" error on every step. Passing extra_body
+            # explicitly overrides that inject on the way through
+            # gpugeek → Anthropic. See docs/analysis/2026-07-10-human-recording-*
+            # (this run's diagnostic trace).
             response = self.client.messages.create(
                 model=self.model,
                 max_tokens=self.max_tokens,
                 system=system_prompt,
                 tools=[ALOHA_TOOL],
                 tool_choice={"type": "tool", "name": "aloha_action"},
+                extra_body={"thinking": {"type": "disabled"}},
                 messages=[{
                     "role": "user",
                     "content": [
@@ -299,8 +310,18 @@ class ClaudeAlohaComputerUseAgent:
     def _scale_xy(self, coord) -> list[int]:
         """Map tool coordinates into executor pixel space (current screenshot size).
 
-        Models often return normalized [0, 1] fractions (vendor drift). Our schema
-        also documents 1024×768 reference pixels; those are scaled proportionally.
+        Three-branch policy (matches historical v2-tw0.3 baseline that achieved 40%
+        on the 20-task set; see docs/analysis/2026-07-01-coordfix-20task-comparison.md
+        §一 for the intent, and docs/analysis/2026-07-02-ext-thinking-only-20task.md
+        for the failure mode observed when branch 2 was accidentally dropped):
+
+          1. Normalized ``[0, 1]`` fractions (e.g. Kimi vendor drift) → multiply by
+             actual screenshot W×H.
+          2. Already-in-frame pixel coordinates (``0 ≤ x ≤ fw``, ``0 ≤ y ≤ fh``) →
+             return unchanged. This is the critical fallback that lets the model emit
+             raw 1920×1080 coordinates directly when it wants to.
+          3. Anything else → treat as ``DISPLAY_WIDTH × DISPLAY_HEIGHT`` (1024×768)
+             reference-frame integers and scale proportionally.
         """
         fw = getattr(self, "_executor_frame_w", self.TARGET_WIDTH)
         fh = getattr(self, "_executor_frame_h", self.TARGET_HEIGHT)
@@ -312,7 +333,7 @@ class ClaudeAlohaComputerUseAgent:
         except (TypeError, ValueError):
             return [0, 0]
 
-        # Normalized coordinates (e.g. Kimi tool_use: [0.383, 0.57]).
+        # Branch 1: normalized coordinates (e.g. Kimi tool_use: [0.383, 0.57]).
         if (
             0.0 <= x <= 1.0
             and 0.0 <= y <= 1.0
@@ -320,6 +341,11 @@ class ClaudeAlohaComputerUseAgent:
         ):
             return [int(round(x * fw)), int(round(y * fh))]
 
+        # Branch 2: already-in-frame pixel coordinates — v2-tw0.3 baseline fallback.
+        if 0.0 <= x <= float(fw) and 0.0 <= y <= float(fh):
+            return [int(round(x)), int(round(y))]
+
+        # Branch 3: 1024×768 reference-frame integers.
         try:
             return [
                 int(round(x / self.DISPLAY_WIDTH * fw)),

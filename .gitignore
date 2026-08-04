@@ -5,3 +5,15 @@ inputs
 .env
 .cache
 .DS_Store
+
+# Local config with secrets - filled per-machine
+Aloha_Learn/config/api_keys.json
+
+# Byte-compiled files (already ignored via __pycache__, this drops previously tracked ones)
+*.pyc
+
+# Aloha_Learn parser intermediate products — one directory per task UUID
+# (mp4 + actions.log + intermediate json). Regenerable from
+# ../OSWorld/human_recordings/ via parser.py. Large (~250MB for 20 tasks),
+# per-machine, must not enter git.
+Aloha_Learn/projects/
