@@ -368,10 +368,49 @@ class ClaudeAlohaComputerUseAgent:
                 if isinstance(tool_input, dict):
                     return self._convert_tool_input(tool_input)
 
-        # No tool_use block. If the model decided the task is done it'll set
-        # stop_reason="end_turn"; otherwise we keep the loop alive with a
-        # CONTINUE no-op (the planner will issue a new instruction next turn).
+        # No aloha_action tool_use. This happens when the upstream (e.g.
+        # gpugeek Vendor2) ignores `tool_choice={"type":"tool", ...}` and
+        # either injects its own tools (PowerShell/computer_use) or returns
+        # a plain TextBlock. Try two fallbacks before giving up.
         stop_reason = getattr(response, "stop_reason", "") or ""
+
+        # Fallback 1: parse another tool_use block (e.g. computer_use).
+        # These typically carry {action: "left_click", coordinate: [x, y]}
+        # or similar; map them into our Aloha action schema.
+        for block in response.content or []:
+            if getattr(block, "type", None) != "tool_use":
+                continue
+            other_name = getattr(block, "name", None)
+            other_input = getattr(block, "input", None) or {}
+            if not isinstance(other_input, dict):
+                continue
+            mapped = self._try_map_foreign_tool(other_name, other_input)
+            if mapped is not None:
+                if self.logger:
+                    self.logger.logger.warning(
+                        "claude_aloha_computer_use: recovered action from "
+                        "foreign tool_use %r (upstream ignored tool_choice)",
+                        other_name,
+                    )
+                return mapped
+
+        # Fallback 2: extract coordinates from any TextBlock ("click on X at
+        # (123, 456)" style). Better a heuristic CLICK than a STOP.
+        for block in response.content or []:
+            if getattr(block, "type", None) != "text":
+                continue
+            text = getattr(block, "text", "") or ""
+            mapped = self._try_parse_text_action(text)
+            if mapped is not None:
+                if self.logger:
+                    self.logger.logger.warning(
+                        "claude_aloha_computer_use: recovered action from "
+                        "TextBlock via regex (no tool_use in reply)",
+                    )
+                return mapped
+
+        # Truly nothing usable. STOP only when model explicitly ended its
+        # turn; otherwise CONTINUE lets the planner retry next round.
         if self.logger:
             self.logger.logger.warning(
                 f"claude_aloha_computer_use: no aloha_action tool_use in reply "
@@ -380,6 +419,104 @@ class ClaudeAlohaComputerUseAgent:
         if stop_reason == "end_turn":
             return {"action": "STOP", "value": "", "position": [0, 0]}
         return {"action": "CONTINUE", "value": "", "position": [0, 0]}
+
+    def _try_map_foreign_tool(self, name, inp):
+        """Best-effort map from Anthropic computer_use / PowerShell / bash
+        tool_use inputs to our Aloha action schema. Returns None if the
+        tool call is not a UI action we can execute."""
+        if not name:
+            return None
+        # Anthropic computer_use tool: {action: "left_click", coordinate: [x,y]}
+        if isinstance(inp, dict):
+            action_raw = str(inp.get("action") or "").lower().strip()
+            coord = inp.get("coordinate") or inp.get("position") or inp.get("start_coordinate")
+            if action_raw in ("left_click", "click", "mouse_click", "tap"):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    return self._convert_tool_input({
+                        "action": "CLICK", "position": [coord[0], coord[1]],
+                    })
+            if action_raw in ("right_click", "mouse_right_click"):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    return self._convert_tool_input({
+                        "action": "RIGHT_CLICK", "position": [coord[0], coord[1]],
+                    })
+            if action_raw in ("double_click",):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    return self._convert_tool_input({
+                        "action": "DOUBLE_CLICK", "position": [coord[0], coord[1]],
+                    })
+            if action_raw in ("type", "type_text", "input"):
+                text = inp.get("text") or inp.get("value") or ""
+                if text:
+                    return self._convert_tool_input({
+                        "action": "INPUT", "text": text,
+                    })
+            if action_raw in ("key", "hotkey", "press_key"):
+                key = inp.get("text") or inp.get("key") or ""
+                if key:
+                    # Anthropic uses "+", we use lists.
+                    keys = [k.strip() for k in key.replace(" ", "").split("+") if k.strip()]
+                    if len(keys) == 1:
+                        return self._convert_tool_input({
+                            "action": "KEY", "key": keys[0],
+                        })
+                    if len(keys) > 1:
+                        return self._convert_tool_input({
+                            "action": "HOTKEY", "keys": keys,
+                        })
+            if action_raw in ("scroll",):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    amt = inp.get("scroll_amount", 0) or inp.get("clicks", 0)
+                    direction = str(inp.get("scroll_direction") or "").lower()
+                    try:
+                        amt = int(amt)
+                    except (TypeError, ValueError):
+                        amt = 3
+                    if direction == "down":
+                        amt = -abs(amt)
+                    elif direction == "up":
+                        amt = abs(amt)
+                    return self._convert_tool_input({
+                        "action": "SCROLL", "position": [coord[0], coord[1]],
+                        "scroll_amount": amt,
+                    })
+            # bash / PowerShell etc. — not a UI action, treat as CONTINUE.
+            if name.lower() in ("bash", "powershell", "shell", "cmd"):
+                return {"action": "CONTINUE", "value": "", "position": [0, 0]}
+        return None
+
+    def _try_parse_text_action(self, text):
+        """Regex-parse a plain-language actor reply for the common shapes.
+        Returns an action dict or None."""
+        import re
+        if not text:
+            return None
+        # "at (x, y)" / "at coordinates (x, y)" / "coordinates: (x, y)"
+        m = re.search(r"(?i)(?:at\s+(?:coordinates?\s+)?|coordinates?[:\s]+)\(?(\d{1,4})[,\s]+(\d{1,4})\)?", text)
+        if not m:
+            m = re.search(r"\((\d{1,4})[,\s]+(\d{1,4})\)", text)
+        if m:
+            x, y = int(m.group(1)), int(m.group(2))
+            low = text.lower()
+            if "right-click" in low or "right click" in low or "context menu" in low:
+                return self._convert_tool_input({"action": "RIGHT_CLICK", "position": [x, y]})
+            if "double-click" in low or "double click" in low:
+                return self._convert_tool_input({"action": "DOUBLE_CLICK", "position": [x, y]})
+            # default: single click
+            return self._convert_tool_input({"action": "CLICK", "position": [x, y]})
+        # "type 'foo'" / "type \"foo\""
+        m = re.search(r"(?i)\btype\s+['\"]([^'\"]{1,200})['\"]", text)
+        if m:
+            return self._convert_tool_input({"action": "INPUT", "text": m.group(1)})
+        # "press <key>" — single alnum key or common named keys
+        m = re.search(r"(?i)\bpress\s+(?:the\s+)?['\"]?([A-Za-z][A-Za-z0-9_+\-]{0,20})['\"]?\s*key", text)
+        if m:
+            key = m.group(1)
+            if "+" in key:
+                keys = [k.strip() for k in key.split("+") if k.strip()]
+                return self._convert_tool_input({"action": "HOTKEY", "keys": keys})
+            return self._convert_tool_input({"action": "KEY", "key": key})
+        return None
 
     def _convert_tool_input(self, inp: dict) -> dict:
         """Translate the tool_use input (already validated against our schema)
