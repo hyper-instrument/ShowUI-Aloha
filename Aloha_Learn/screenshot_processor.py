@@ -43,7 +43,7 @@ class VideoScreenshotExtractor:
         return x1, y1, x2, y2
 
     def _get_frame_at(self, video_path, timestamp_seconds):
-        cap = cv2.VideoCapture(video_path)
+        cap = cv2.VideoCapture(str(video_path))
         if not cap.isOpened():
             return None
         try:

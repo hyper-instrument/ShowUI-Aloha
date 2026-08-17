@@ -368,18 +368,362 @@ class ClaudeAlohaComputerUseAgent:
                 if isinstance(tool_input, dict):
                     return self._convert_tool_input(tool_input)
 
-        # No tool_use block. If the model decided the task is done it'll set
-        # stop_reason="end_turn"; otherwise we keep the loop alive with a
-        # CONTINUE no-op (the planner will issue a new instruction next turn).
+        # No aloha_action tool_use. This happens when the upstream (e.g.
+        # gpugeek Vendor2) ignores `tool_choice={"type":"tool", ...}` and
+        # either injects its own tools (PowerShell/computer_use) or returns
+        # a plain TextBlock. Try two fallbacks before giving up.
         stop_reason = getattr(response, "stop_reason", "") or ""
+
+        # Log a shape inventory on every degraded response — even when a
+        # fallback rescues it — so post-mortems can tell which upstream
+        # regression flavor we hit. See
+        # docs/analysis/2026-08-16-osworld-ace-benchmark-integration-and-gap-analysis.md
+        # for the taxonomy this defends against.
         if self.logger:
+            block_types = [
+                getattr(b, "type", type(b).__name__)
+                for b in (response.content or [])
+            ]
+            foreign_tools = [
+                getattr(b, "name", None)
+                for b in (response.content or [])
+                if getattr(b, "type", None) == "tool_use"
+            ]
             self.logger.logger.warning(
-                f"claude_aloha_computer_use: no aloha_action tool_use in reply "
-                f"(stop_reason={stop_reason!r})"
+                "claude_aloha_computer_use: degraded response "
+                "(no aloha_action tool_use) "
+                "stop_reason=%r block_types=%r foreign_tools=%r",
+                stop_reason,
+                block_types,
+                foreign_tools,
+            )
+
+        # Fallback 1: parse another tool_use block (e.g. computer_use).
+        # These typically carry {action: "left_click", coordinate: [x, y]}
+        # or similar; map them into our Aloha action schema.
+        for block in response.content or []:
+            if getattr(block, "type", None) != "tool_use":
+                continue
+            other_name = getattr(block, "name", None)
+            other_input = getattr(block, "input", None) or {}
+            if not isinstance(other_input, dict):
+                continue
+            mapped = self._try_map_foreign_tool(other_name, other_input)
+            if mapped is not None:
+                if self.logger:
+                    self.logger.logger.warning(
+                        "claude_aloha_computer_use: recovered action from "
+                        "foreign tool_use %r (upstream ignored tool_choice)",
+                        other_name,
+                    )
+                return mapped
+
+        # Fallback 2: extract coordinates from any TextBlock ("click on X at
+        # (123, 456)" style). Better a heuristic CLICK than a STOP.
+        for block in response.content or []:
+            if getattr(block, "type", None) != "text":
+                continue
+            text = getattr(block, "text", "") or ""
+            mapped = self._try_parse_text_action(text)
+            if mapped is not None:
+                if self.logger:
+                    self.logger.logger.warning(
+                        "claude_aloha_computer_use: recovered action from "
+                        "TextBlock via regex (no tool_use in reply)",
+                    )
+                return mapped
+
+        # Truly nothing usable. STOP only when model explicitly ended its
+        # turn; otherwise CONTINUE lets the planner retry next round.
+        if self.logger:
+            # Dump a bounded slice of every TextBlock so future post-mortems
+            # can spot new fallback shapes we don't yet recognize.
+            text_previews = []
+            for b in (response.content or []):
+                if getattr(b, "type", None) == "text":
+                    txt = getattr(b, "text", "") or ""
+                    text_previews.append(txt[:400])
+            self.logger.logger.warning(
+                "claude_aloha_computer_use: no rescueable action in reply "
+                "(stop_reason=%r, text_previews=%r)",
+                stop_reason,
+                text_previews,
             )
         if stop_reason == "end_turn":
             return {"action": "STOP", "value": "", "position": [0, 0]}
         return {"action": "CONTINUE", "value": "", "position": [0, 0]}
+
+    def _try_map_foreign_tool(self, name, inp):
+        """Best-effort map from Anthropic computer_use / PowerShell / bash
+        tool_use inputs to our Aloha action schema. Returns None if the
+        tool call is not a UI action we can execute."""
+        if not name:
+            return None
+        # Anthropic computer_use tool: {action: "left_click", coordinate: [x,y]}
+        if isinstance(inp, dict):
+            action_raw = str(inp.get("action") or "").lower().strip()
+            coord = inp.get("coordinate") or inp.get("position") or inp.get("start_coordinate")
+            if action_raw in ("left_click", "click", "mouse_click", "tap"):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    return self._convert_tool_input({
+                        "action": "CLICK", "position": [coord[0], coord[1]],
+                    })
+            if action_raw in ("right_click", "mouse_right_click"):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    return self._convert_tool_input({
+                        "action": "RIGHT_CLICK", "position": [coord[0], coord[1]],
+                    })
+            if action_raw in ("double_click",):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    return self._convert_tool_input({
+                        "action": "DOUBLE_CLICK", "position": [coord[0], coord[1]],
+                    })
+            if action_raw in ("type", "type_text", "input"):
+                text = inp.get("text") or inp.get("value") or ""
+                if text:
+                    return self._convert_tool_input({
+                        "action": "INPUT", "text": text,
+                    })
+            if action_raw in ("key", "hotkey", "press_key"):
+                key = inp.get("text") or inp.get("key") or ""
+                if key:
+                    # Anthropic uses "+", we use lists.
+                    keys = [k.strip() for k in key.replace(" ", "").split("+") if k.strip()]
+                    if len(keys) == 1:
+                        return self._convert_tool_input({
+                            "action": "KEY", "key": keys[0],
+                        })
+                    if len(keys) > 1:
+                        return self._convert_tool_input({
+                            "action": "HOTKEY", "keys": keys,
+                        })
+            if action_raw in ("scroll",):
+                if coord and isinstance(coord, (list, tuple)) and len(coord) >= 2:
+                    amt = inp.get("scroll_amount", 0) or inp.get("clicks", 0)
+                    direction = str(inp.get("scroll_direction") or "").lower()
+                    try:
+                        amt = int(amt)
+                    except (TypeError, ValueError):
+                        amt = 3
+                    if direction == "down":
+                        amt = -abs(amt)
+                    elif direction == "up":
+                        amt = abs(amt)
+                    return self._convert_tool_input({
+                        "action": "SCROLL", "position": [coord[0], coord[1]],
+                        "scroll_amount": amt,
+                    })
+            # bash / PowerShell etc. — not a UI action, treat as CONTINUE.
+            if name.lower() in ("bash", "powershell", "shell", "cmd"):
+                return {"action": "CONTINUE", "value": "", "position": [0, 0]}
+        return None
+
+    def _try_parse_text_action(self, text):
+        """Regex-parse a plain-language actor reply for the common shapes.
+        Returns an action dict or None."""
+        import re
+        if not text:
+            return None
+
+        # First: pyautogui code block. Vendor2/gpugeek routes sometimes drop
+        # tool_use entirely and instead emit a python snippet — see
+        # docs/analysis/2026-08-16-osworld-ace-benchmark-integration-and-gap-analysis.md
+        # §3.2. The block may pass coordinates as literal digits OR via named
+        # variables assigned a few lines above (e.g. `start_x, start_y = 651, 395`
+        # then `pyautogui.moveTo(start_x, start_y)`). The bare-tuple regex
+        # below only catches the literal-digit case; this branch also handles
+        # variable indirection and the moveTo→mouseDown→moveTo→mouseUp drag
+        # pattern.
+        pg = self._parse_pyautogui_block(text)
+        if pg is not None:
+            return pg
+
+        # "at (x, y)" / "at coordinates (x, y)" / "coordinates: (x, y)"
+        m = re.search(r"(?i)(?:at\s+(?:coordinates?\s+)?|coordinates?[:\s]+)\(?(\d{1,4})[,\s]+(\d{1,4})\)?", text)
+        if not m:
+            m = re.search(r"\((\d{1,4})[,\s]+(\d{1,4})\)", text)
+        if m:
+            x, y = int(m.group(1)), int(m.group(2))
+            low = text.lower()
+            if "right-click" in low or "right click" in low or "context menu" in low:
+                return self._convert_tool_input({"action": "RIGHT_CLICK", "position": [x, y]})
+            if "double-click" in low or "double click" in low:
+                return self._convert_tool_input({"action": "DOUBLE_CLICK", "position": [x, y]})
+            # default: single click
+            return self._convert_tool_input({"action": "CLICK", "position": [x, y]})
+        # "type 'foo'" / "type \"foo\""
+        m = re.search(r"(?i)\btype\s+['\"]([^'\"]{1,200})['\"]", text)
+        if m:
+            return self._convert_tool_input({"action": "INPUT", "text": m.group(1)})
+        # "press <key>" — single alnum key or common named keys
+        m = re.search(r"(?i)\bpress\s+(?:the\s+)?['\"]?([A-Za-z][A-Za-z0-9_+\-]{0,20})['\"]?\s*key", text)
+        if m:
+            key = m.group(1)
+            if "+" in key:
+                keys = [k.strip() for k in key.split("+") if k.strip()]
+                return self._convert_tool_input({"action": "HOTKEY", "keys": keys})
+            return self._convert_tool_input({"action": "KEY", "key": key})
+        return None
+
+    def _parse_pyautogui_block(self, text):
+        """Extract an Aloha action from a pyautogui code snippet.
+
+        Handles three shapes:
+          1. Direct-digit args: ``pyautogui.click(651, 395)``
+          2. Variable-mediated args: ``start_x, start_y = 651, 395`` on one line,
+             ``pyautogui.moveTo(start_x, start_y)`` on another
+          3. Drag sandwich: ``moveTo(start)`` → ``mouseDown`` → ``moveTo(end)``
+             → ``mouseUp``, or ``moveTo(start)`` → ``dragTo(end, ...)``
+
+        Also recognises ``typewrite``/``write``/``press``/``hotkey``/``scroll``.
+        Returns an action dict (already run through :meth:`_convert_tool_input`)
+        or ``None`` if no pyautogui call is present.
+        """
+        import re
+
+        # 1) Build variable → digit map from assignments in this text block.
+        var_map: dict[str, int] = {}
+        # Tuple assignment: "a, b = 1, 2"
+        for m in re.finditer(
+            r"\b(\w+)\s*,\s*(\w+)\s*=\s*(\d{1,4})\s*,\s*(\d{1,4})\b", text
+        ):
+            var_map[m.group(1)] = int(m.group(3))
+            var_map[m.group(2)] = int(m.group(4))
+        # Scalar assignment on its own line: "x = 42"
+        for m in re.finditer(
+            r"(?m)^\s*(\w+)\s*=\s*(\d{1,4})\s*$", text
+        ):
+            var_map.setdefault(m.group(1), int(m.group(2)))
+
+        def resolve(tok: str):
+            tok = tok.strip()
+            if re.fullmatch(r"-?\d{1,4}", tok):
+                return int(tok)
+            # Strip potential type coercions like int(start_x).
+            im = re.fullmatch(r"int\(\s*(\w+)\s*\)", tok)
+            if im:
+                tok = im.group(1)
+            return var_map.get(tok)
+
+        def pos_from(args: list[str]):
+            if len(args) < 2:
+                return None
+            x = resolve(args[0])
+            y = resolve(args[1])
+            if x is None or y is None:
+                return None
+            return [x, y]
+
+        # 2) Collect pyautogui.<func>(...) calls in source order.
+        calls: list[tuple[str, list[str]]] = []
+        for m in re.finditer(r"pyautogui\.(\w+)\s*\(([^)]*)\)", text):
+            func = m.group(1)
+            raw = m.group(2)
+            args = [a.strip() for a in raw.split(",")] if raw.strip() else []
+            # Drop kwargs like button='left' / duration=0.5 for positional lookup.
+            positional = [a for a in args if "=" not in a]
+            calls.append((func, positional))
+
+        if not calls:
+            return None
+
+        # 3) Drag detection has priority over lone clicks.
+        # 3a) dragTo(...) preceded by moveTo(...).
+        for i, (func, args) in enumerate(calls):
+            if func == "dragTo":
+                end = pos_from(args)
+                if end is None:
+                    continue
+                start = None
+                for pfunc, pargs in reversed(calls[:i]):
+                    if pfunc == "moveTo":
+                        start = pos_from(pargs)
+                        if start:
+                            break
+                if start:
+                    return self._convert_tool_input({
+                        "action": "DRAG",
+                        "drag_from": start,
+                        "position": end,
+                    })
+
+        # 3b) moveTo → mouseDown → moveTo → mouseUp sandwich.
+        move_calls = [args for f, args in calls if f == "moveTo"]
+        has_down = any(f == "mouseDown" for f, _ in calls)
+        has_up = any(f == "mouseUp" for f, _ in calls)
+        if has_down and has_up and len(move_calls) >= 2:
+            start = pos_from(move_calls[0])
+            end = pos_from(move_calls[-1])
+            if start and end:
+                return self._convert_tool_input({
+                    "action": "DRAG",
+                    "drag_from": start,
+                    "position": end,
+                })
+
+        # 4) Otherwise map the first click-like call.
+        click_map = {
+            "click": "CLICK",
+            "leftClick": "CLICK",
+            "moveTo": "CLICK",  # bare moveTo without buttons → click target
+            "rightClick": "RIGHT_CLICK",
+            "doubleClick": "DOUBLE_CLICK",
+            "tripleClick": "TRIPLE_CLICK",
+        }
+        for func, args in calls:
+            if func in click_map:
+                pos = pos_from(args)
+                if pos:
+                    return self._convert_tool_input({
+                        "action": click_map[func],
+                        "position": pos,
+                    })
+
+        # 5) scroll(amt) or scroll(amt, x, y).
+        for func, args in calls:
+            if func == "scroll" and args:
+                amt = resolve(args[0])
+                if amt is None:
+                    continue
+                pos = pos_from(args[1:3]) if len(args) >= 3 else None
+                return self._convert_tool_input({
+                    "action": "SCROLL",
+                    "position": pos or [0, 0],
+                    "scroll_amount": int(amt),
+                })
+
+        # 6) typewrite('foo') / write('foo').
+        for func, args in calls:
+            if func in ("typewrite", "write") and args:
+                raw = args[0].strip()
+                if len(raw) >= 2 and raw[0] in "'\"" and raw[0] == raw[-1]:
+                    return self._convert_tool_input({
+                        "action": "INPUT",
+                        "text": raw[1:-1],
+                    })
+
+        # 7) press('enter') / hotkey('ctrl', 's').
+        for func, args in calls:
+            if func == "press" and args:
+                raw = args[0].strip()
+                if len(raw) >= 2 and raw[0] in "'\"" and raw[0] == raw[-1]:
+                    return self._convert_tool_input({
+                        "action": "KEY",
+                        "key": raw[1:-1],
+                    })
+            if func == "hotkey" and args:
+                keys: list[str] = []
+                for a in args:
+                    a = a.strip()
+                    if len(a) >= 2 and a[0] in "'\"" and a[0] == a[-1]:
+                        keys.append(a[1:-1])
+                if keys:
+                    return self._convert_tool_input({
+                        "action": "HOTKEY",
+                        "keys": keys,
+                    })
+
+        return None
 
     def _convert_tool_input(self, inp: dict) -> dict:
         """Translate the tool_use input (already validated against our schema)
